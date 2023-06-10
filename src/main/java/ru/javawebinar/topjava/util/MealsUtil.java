@@ -21,59 +21,47 @@ import static java.util.stream.Collectors.toList;
 import static ru.javawebinar.topjava.util.TimeUtil.isBetweenHalfOpen;
 
 public class MealsUtil {
+
+    public static final List<Meal> MEAL_LIST = Arrays.asList(
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500),
+            new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410)
+    );
+
     public static void main(String[] args) throws InterruptedException {
-        List<Meal> meals = Arrays.asList(
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 10, 0), "Завтрак", 500),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 13, 0), "Обед", 1000),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 30, 20, 0), "Ужин", 500),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 0, 0), "Еда на граничное значение", 100),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 10, 0), "Завтрак", 1000),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 13, 0), "Обед", 500),
-                new Meal(LocalDateTime.of(2020, Month.JANUARY, 31, 20, 0), "Ужин", 410)
-        );
 
-        final LocalTime startTime = LocalTime.of(7, 0);
-        final LocalTime endTime = LocalTime.of(12, 0);
-
-        List<MealTo> mealsTo = filteredByStreams(meals, startTime, endTime, 2000);
+        List<MealTo> mealsTo = getFilteredWithExceeded(MEAL_LIST, LocalTime.of(7, 0), LocalTime.of(12, 0), 2000);
         mealsTo.forEach(System.out::println);
 
-        System.out.println(filteredByCycles(meals, startTime, endTime, 2000));
+        System.out.println(getFilteredWithExceeded(MEAL_LIST, LocalTime.MIN, LocalTime.MAX, 2000));
+}
 
-        // Optional2 recursion
-        System.out.println(filteredByRecursion(meals, startTime, endTime, 2000));
-        System.out.println(filteredBySetterRecursion(meals, startTime, endTime, 2000));
-        System.out.println(filteredByRecursionWithCycleAndRunnable(meals, startTime, endTime, 2000));
+public static List<MealTo> getWithExceeded(Collection<Meal> meals, int caloriesPerDay) {
+        return getFilteredWithExceeded(meals, LocalTime.MIN, LocalTime.MAX, caloriesPerDay);
+}
 
-        //  Optional2 reference type
-        //        System.out.println(filteredByAtomic(meals, startTime, endTime, 2000));  // or boolean[1]
-        //        System.out.println(filteredByReflection(meals, startTime, endTime, 2000));
-
-        //   Optional2 delayed execution
-        //      System.out.println(filteredByClosure(meals, startTime, endTime, 2000));
-        System.out.println(filteredByExecutor(meals, startTime, endTime, 2000));
-        System.out.println(filteredByLock(meals, startTime, endTime, 2000));
-        System.out.println(filteredByCountDownLatch(meals, startTime, endTime, 2000));
-        System.out.println(filteredByPredicate(meals, startTime, endTime, 2000));
-        System.out.println(filteredByConsumerChain(meals, startTime, endTime, 2000));
-
-        //   Optional2 streams
-        System.out.println(filteredByFlatMap(meals, startTime, endTime, 2000));
-        System.out.println(filteredByCollector(meals, startTime, endTime, 2000));
-    }
-
-    public static List<MealTo> filteredByStreams(List<Meal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
+    public static List<MealTo> getFilteredWithExceeded(Collection<Meal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         Map<LocalDate, Integer> caloriesSumByDate = meals.stream()
-                .collect(
-                        Collectors.groupingBy(Meal::getDate, Collectors.summingInt(Meal::getCalories))
+                .collect(Collectors.groupingBy(Meal::getDate, Collectors.summingInt(Meal::getCalories))
                         //                      Collectors.toMap(Meal::getDate, Meal::getCalories, Integer::sum)
                 );
 
         return meals.stream()
                 .filter(meal -> isBetweenHalfOpen(meal.getTime(), startTime, endTime))
-                .map(meal -> createTo(meal, caloriesSumByDate.get(meal.getDate()) > caloriesPerDay))
+                .map(meal -> createWithExceeded(meal, caloriesSumByDate.get(meal.getDate()) > caloriesPerDay))
                 .collect(Collectors.toList());
     }
+
+    public static MealTo createWithExceeded(Meal meal, boolean exceeded) {
+        return new MealTo(meal.getDateTime(), meal.getDescription(), meal.getCalories(), exceeded);
+    }
+
+
+
 
     public static List<MealTo> filteredByCycles(List<Meal> meals, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
 

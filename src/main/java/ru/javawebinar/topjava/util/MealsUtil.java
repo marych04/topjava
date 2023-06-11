@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static ru.javawebinar.topjava.util.TimeUtil.isBetweenHalfOpen;
+import static ru.javawebinar.topjava.util.DateTimeUtil.TimeUtil.isBetweenHalfOpen;
 
 public class MealsUtil {
     public static void main(String[] args) throws InterruptedException {

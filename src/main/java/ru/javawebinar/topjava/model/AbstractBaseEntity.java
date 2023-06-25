@@ -1,5 +1,4 @@
 package ru.javawebinar.topjava.model;
-package ru.javawebinar.topjava.model;
 
 import org.springframework.util.Assert;
 

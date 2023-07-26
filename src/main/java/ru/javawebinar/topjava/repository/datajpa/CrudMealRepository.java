@@ -10,19 +10,17 @@ import ru.javawebinar.topjava.model.Meal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Transactional(readOnly = true)
 public interface CrudMealRepository extends JpaRepository<Meal, Integer> {
 
-    List<Meal> findAllByUserId(int userId);
-
-    List<Meal> findAllByDateTimeBetweenAndUserId(LocalDateTime st, LocalDateTime end, int userId);
-
-    Meal save(Meal meal, int userId);
-
-    @Transactional
     @Modifying
-//    @Query(name = User.DELETE)
-    @Query("DELETE FROM Meal u WHERE u.id=:id and u.id=:user_id")
-    int delete(@Param("id") int id, @Param("user_id") int userId);
+    @Transactional
+    @Query("DELETE FROM Meal m WHERE m.id=:id AND m.user.id=:userId")
+    int delete(@Param("id") int id, @Param("userId") int userId);
 
-    Meal findMealByIdAndUserId(int id, int userId);
+    @Query("SELECT m FROM Meal m WHERE m.user.id=:userId ORDER BY m.dateTime DESC")
+    List<Meal> getAll(@Param("userId") int userId);
+
+    @Query("SELECT m from Meal m WHERE m.user.id=:userId AND m.dateTime >= :startDate AND m.dateTime < :endDate ORDER BY m.dateTime DESC")
+    List<Meal> getBetweenHalfOpen(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, @Param("userId") int userId);
 }
